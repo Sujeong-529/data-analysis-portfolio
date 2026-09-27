@@ -1,0 +1,372 @@
+---
+title: 'The Strait of Hormuz as Strategic Geography: Crude Oil Price and Flow Dynamics
+  in Relation to Iran’s Geopolitical Events'
+output:
+  pdf_document: default
+fontsize: 11pt
+geometry: margin=2cm
+---
+<style>
+h1.title {
+  text-align: center;
+}
+</style>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction
+Amid intensifying tensions surrounding the Strait of Hormuz, this research begins with the question of why the Strait of Hormuz is considered strategically important to the international community, rather than merely a strait. This research examines how geopolitical events related to Iran influence international trade and the energy market, and what relationships exist among them. To do so, I first compare the transit volumes through major global chokepoints to understand the strategic importance of the Strait of Hormuz. Afterwards, I analyze changes in crude oil prices and flows in relation to major Iran-related geopolitical events, and explore how these events are related to energy markets and crude oil transportation.
+
+## Data and Methodology
+Figure 1 compares the transit volumes of crude oil and petroleum liquids across major global maritime chokepoints. Using data from the U.S. Energy Information Administration (EIA), transit volumes for the first half of 2025 were extracted for analysis. The analysis covers seven key chokepoints: the Strait of Malacca, the Strait of Hormuz, the Suez Canal and SUMED Pipeline, Bab el-Mandeb, the Danish Straits, the Turkish Straits (Dardanelles), and the Panama Canal. A horizontal bar chart is employed to intuitively compare the relative transit volumes among these chokepoints. 
+Figure 2 uses Brent crude oil spot price data from January 1, 2019, to July 24, 2026, sourced from EIA data retrieved from FRED. Crude oil prices during the selected period are plotted on a line chart to easily identify the price trends. Six Iran-related geopolitical events during the same period were selected and organized into event data, and the date of each event is marked with a vertical dotted line on the chart. For each event, the oil price on the closest trading day preceding the event was used as the baseline, and the subsequent seven calendar days from the event date were defined as the observation period. Oil prices were analyzed only for trading days within this period. This allows for comparing oil price levels and short-term fluctuations before and after each event.
+Figure 3 uses the Strait of Hormuz Trade Tracker, a joint project by AXSMarine and the WTO (World Trade Organization), to analyze the crude oil transit index in the Strait of Hormuz from January 1, 2025, to August 4, 2026. Among various commodities, crude oil was selected for the analysis, and the index is based on the 2025 average transit volume, which is set at 100. Moreover, a 7-day moving average is used to reduce short-term fluctuations in the daily crude oil transit index, which is visualized in a line chart to show its trend more clearly. In addition, three major Iran-related geopolitical events during the same period were selected and organized as event data, and the same observation period as in Figure 2 was applied. The date of each event is marked with a vertical dotted line to facilitate comparison of the crude oil transit index before and after each event.
+
+## Findings and Interpretation
+```{r, echo=FALSE, message=FALSE, warning=FALSE,fig.width=14, fig.height=6, out.width="100%"}
+library(ggplot2)
+choke_points<-data.frame(
+  Name=c("Strait of Malacca", "Strait of Hormuz", "Danish Strait",
+         "Suez Canal and SUMED Pipeline", "Bab el-Mandeb", "Turkish Straits", "Panama Canal"),
+  Volume=c(23.2, 20.9, 4.9, 4.9, 4.2, 3.7, 2.3)
+)
+choke_points$Group<-ifelse(
+  choke_points$Name=="Strait of Hormuz",
+  "Highlight",
+  "Normal"
+)
+ggplot(data=choke_points,
+       aes(x=Volume,
+           y=reorder(Name,Volume),
+           fill=Group))+
+  geom_bar(stat="identity", width=0.6)+
+  scale_fill_manual(values=c("Highlight"="#1B365D",
+                             "Normal"="#D3D3D3"))+
+  geom_text(aes(label=Volume), hjust=-0.3, size=4.5, fontface="bold")+
+  scale_x_continuous(limits=c(0,26), expand=expansion(mult=c(0,0.05)))+
+  labs(
+    title="Volume Comparison Across Major Maritime Chokepoints",
+    subtitle="Daily oil transit flow in the first half of 2025 (Million barrels/day)",
+    x=NULL,
+    caption="Source: U.S. Energy Information Administration (EIA), Short-Term Energy Outlook, Feb. 2026.")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        plot.title=element_text(
+          size=17.5,
+          face="bold",
+          hjust=0,
+          margin=margin(b=8)
+        ),
+        plot.subtitle = element_text(
+          size=11,
+          color="grey30",
+          hjust=0.005,
+          margin=margin(b=15)
+        ),
+        axis.title.x = element_text(
+          size=12,
+          face="bold",
+          margin=margin(t=12),
+          hjust=0.35
+        ),
+        axis.text.x=element_text(
+          size=8),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(
+          size=11.5,
+          face="plain",
+          color="black"
+        ),
+        plot.caption=element_text(
+          size=9.5,
+          color="grey50",
+          hjust=1,
+          margin=margin(t=16)
+        ),
+        panel.grid.major.x = element_line(color = "gray93", linewidth = 0.5), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.margin=margin(t=20, r=30, b=35, l=30)
+  )
+```
+Figure 1 indicates that the Strait of Hormuz recorded the second-highest transit volume, following the Strait of Malacca, among the seven major chokepoints. The Strait of Malacca had a transit volume of 23.2 million barrels per day, while the Strait of Hormuz stood at 20.9 million barrels per day. Meanwhile, the Suez Canal and SUMED Pipeline, which had the third-highest transit volume, registered 4.9 million barrels per day (EIA, 2026). This figure is substantially smaller than those of the top two chokepoints. This demonstrates that the Strait of Hormuz is an important transport route for international crude oil and petroleum liquids compared with other key maritime chokepoints. Therefore, if a military conflict occurs in the Strait of Hormuz or the strait is closed, it could have a considerable impact on international energy supplies and maritime transportation.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=6, out.width="100%"}
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(tidyquant)
+library(scales)
+oil_data<-tq_get("DCOILBRENTEU",
+                 get="economic.data",
+                 from="2019-01-01",
+                 to="2026-07-24")%>%
+  rename(close=price)%>%
+  filter(!is.na(close))
+events_data<-tibble(
+  date=as.Date(c(
+    "2019-05-12",
+    "2020-01-03",
+    "2024-04-13",
+    "2026-02-28",
+    "2026-06-17",
+    "2026-07-08"
+  )),
+  event=c(
+    "Gulf of Oman Tanker Attacks\nMay 2019",
+    "Soleimani Assassination\nJan 2020",
+    "Iran's First Direct Attack on Israel\nApr 2024",
+    "US-Israeli Strikes on Iran\nFeb 2026",
+    "US-Iran MOU\nJun 2026",
+    "US-Iran Renewed Hostilities \nJul 2026"
+  ),
+  y_pos = c(98, 155, 70, 130, 10, 190),
+  nx=c(50, 0, 0, -100, -8, 150)
+)
+p<-ggplot(data=oil_data,
+       aes(x=date,
+           y=close))+
+  geom_line(color="#1F77B4",linewidth=0.7,alpha=0.85)+
+  geom_vline(
+    data=events_data,
+    aes(xintercept=date),
+    color="#D62728",
+    linetype="dashed",
+    linewidth=0.4
+  )+
+  geom_label_repel(
+    data=events_data,
+    aes(x=date,y=y_pos,label=event),
+    nudge_x=events_data$nx,
+    color="#8A2535",
+    label.size = 0.2,
+    fill="#FAFAFA",
+    fontface="bold",
+    size=2.8,
+    box.padding = 1.5,
+    point.padding = 0.5,
+    force=3,
+    segment.color = "grey50",
+    segment.size = 0.4,
+    arrow = arrow(length = unit(0.009, "npc"), type = "closed"),
+    min.segment.length = 0,
+    direction = "both"
+  )+
+  scale_x_date(
+    breaks = as.Date(paste0(2019:2026, "-01-01")),  
+    date_labels = "%Y",                               
+    expand = c(0, 0)
+  )+
+  coord_cartesian(
+    xlim = as.Date(as.Date(c("2019-01-01", "2028-03-30"))),
+    clip = "off" 
+  ) +
+  scale_y_continuous(
+    limits = c(0, 200),
+    labels = dollar_format(prefix = "$")
+  )+
+  labs(
+    title="Geopolitical Risk and Brent Crude Oil Price Movements, 2019–2026",
+    subtitle="Selected Iran-Related Events in the Middle East",
+    x=NULL,
+    y="Brent Crude Oil Spot Price (USD/barrel)",
+    caption="Source: U.S. Energy Information Administration (EIA) via FRED (DCOILBRENTEU)"
+  )+
+  theme_tq() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(color = "grey30", size = 10, margin = margin(b = 10, t=5),hjust=0.003),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(15, 15, 15, 15),
+    plot.caption = element_text(
+      color="grey50",
+      margin=margin(t=10)
+    ),
+      axis.title.y = element_text(
+        margin = margin(r = 12)
+    )
+  )
+print(p)
+ggsave(
+  filename = "oil_events_plot.png",
+  plot = p,
+  width = 12,
+  height = 6.5,
+  dpi = 300
+)
+```
+
+### Event 1: Gulf of Oman Tanker Attacks (May 12, 2019)
+The first event was the Gulf of Oman tanker attacks on May 12, 2019 (VOA News, 2019). The oil price on May 10, the closest trading day preceding the event, was $71.63/bbl, and the oil price on May 13, the first trading day after the event, increased slightly to $72.35/bbl. The upward trend continued through May 16, when the price reached the highest level during the seven-day observation period at $74.70/bbl. However, the price began to decline on May 17, falling to $73.94/bbl (EIA, n.d.). This trend indicates that the event may have contributed to a short-term increase in oil prices. That said, the incident involved acts of sabotage against commercial vessels, and no casualties or fuel spills were reported (VOA News, 2019), suggesting that actual disruption to oil supplies was likely limited. In addition, on May 14, Yemen’s Iranian-allied Houthi rebels launched drone strikes on an oil pipeline in Saudi Arabia (Gambrell, 2019), creating an additional source of geopolitical risk. Therefore, the rise in oil prices through May 16 may have reflected not only the May 12 incident but also the impact of the May 14 event.
+
+### Event 2: Soleimani Assassination (January 3, 2020)
+The second event was the Soleimani Assassination on January 3, 2020 (Doucet, 2020). The oil price on January 2, the closest trading day preceding the event, was $67.05/bbl and rose to $69.08/bbl on the event date. It increased further to $70.25/bbl on January 6 before reversing into a downward trend, falling to $67.31/bbl on January 8 and $66.77/bbl on January 10 (EIA, n.d.). Although the incident may have caused a substantial shock from a political and security perspective, the oil price increase appears to have been short-lived. In particular, while Iran carried out retaliatory missile attacks against U.S. military bases in Iraq on January 8 (Toosi et al., 2020), the oil price declined from the previous day. This suggests that the impact on the oil market may have been limited, as the military action targeted military facilities rather than oil infrastructure and did not escalate into a broader military conflict (BBC News, 2020).
+
+### Event 3: Iran's First Direct Attack on Israel (April 13, 2024)
+The third event was Iran’s direct attack on Israel on April 13, 2024 (Federman & Gambrell, 2024). The oil price on April 12, the closest trading day preceding the event, was $93.12/bbl, but it decreased to $90.84/bbl on the first trading day after the event. On April 16, the price increased marginally to $91.29/bbl before declining again, reaching $87.96/bbl on April 19 (EIA, n.d.). This trend may be attributed to the possibility that concerns over Iran’s retaliation had already been reflected in oil prices as a risk premium following the Israeli strike on the Iranian consulate in Damascus on April 1 (Bowen & Gritten, 2024). In addition, although Iran directly attacked Israel, 99% of the missiles and drones were intercepted (Federman & Gambrell, 2024). Iran described the attack as retaliation for the April 1 incident and an exercise of its right to self-defense, while stating that it did not seek further escalation or war in the region (Psaledakis & Zengerle, 2024). Therefore, the market may have assessed the possibility of the situation escalating into a large-scale disruption to oil supplies as relatively limited.
+
+### Event 4: U.S.-Israeli Strikes on Iran (February 28, 2026)
+The fourth event was the U.S.-Israeli strikes on Iran on February 28, 2026 (Ratner et al., 2026). The oil price on February 27, the closest trading day preceding the event, was $71.32/bbl, followed by a marked increase to $77.24/bbl on the first trading day after the event. The price then experienced some fluctuations before rising sharply again, reaching its highest level of $95.74/bbl on March 6 during the observation period (EIA, n.d.). The continued rise in oil prices appears to be associated with the death of Iran’s Supreme Leader on the day of the airstrike (Bell, 2026), as well as Iran’s declaration of the closure of the Strait a few days after the event (Ratner et al., 2026). During this period, hundreds of commercial vessels and thousands of crew members remained within the Persian Gulf (Ratner et al., 2026), suggesting that vessel traffic through the Strait of Hormuz was effectively halted. This indicates that market fears and concerns about an actual disruption to oil supplies may have been simultaneously reflected in oil prices, as vessel traffic was blocked by the closure of the strait, unlike in previous events.
+
+### Event 5: US-Iran MOU (June 17, 2026)
+The fifth event was the US-Iran MOU on June 17, 2026 (Ratner et al., 2026). The oil price on June 16, the closest trading day preceding the event, was $80.50/bbl, and the price on the day the MOU was signed was $80.33/bbl. After slight fluctuations, it gradually declined, reaching $72.09/bbl on June 24 (EIA, n.d.). This can be interpreted as evidence that oil prices reflected market expectations of easing US-Iran tensions and the normalization of vessel traffic through the Strait of Hormuz.
+
+### Event 6: US-Iran Renewed Hostilites (July 7, 2026)
+The sixth event was the renewed hostilities between the US and Iran on July 7, 2026, when vessels transiting the Strait of Hormuz were attacked, and the US conducted airstrikes targeting Iran (Del Valle et al., 2026). The oil price on July 6, the closest trading day preceding the event, was $69.56/bbl, and it slightly increased to $71.78/bbl on the event day. It subsequently surged to $76.50/bbl on July 8 and, despite some fluctuations, continued to rise to $83.69/bbl on July 14 (EIA, n.d.). This represented an approximately 16.6 percent rise from the event day to the last observation day. The increase may be associated with the US’s withdrawal of the temporary sanctions waiver for Iran’s oil sales under the MOU, as well as the military clashes on the same day (Del Valle et al., 2026). Furthermore, it can be interpreted as a signal that easing US-Iran tensions under the MOU was being undermined, and heightened concerns about a resumption of hostilities may have contributed to the rise in oil prices.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE,fig.width=14, fig.height=6, out.width="100%"}
+install.packages("ggplot2")
+install.packages("dplyr")
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(scales)
+hormuz <- read_excel("C:/Users/hsj99/OneDrive/바탕 화면/R portfolio(1)/crude_oil_export_voy_intake_index.xlsx")
+# names(hormuz)
+# head(hormuz)
+hormuz$date <- as.Date(hormuz$date)
+events_data<-tibble(
+  date=as.Date(c(
+    "2026-02-28",
+    "2026-06-17",
+    "2026-07-08"
+  )),
+  event=c(
+    "US-Israeli Strikes on Iran\nFeb 2026",
+    "US-Iran MOU\nJun 2026",
+    "US-Iran Renewed Hostilities \nJul 2026"
+  ),
+  label_x = as.Date(c("2025-12-26", 
+                      "2026-05-07",
+                      "2026-09-16")),
+  label_y = c(58, 39, 85)
+)
+my_breaks <- seq.Date(from = as.Date("2025-02-01"), to = as.Date("2026-08-01"), by = "2 months")
+p<-ggplot(hormuz, aes(x = date)) +
+  geom_line(
+    aes(y = ma_7day),
+    linewidth = 0.8, 
+    color="#1F77B4",alpha=0.85
+  ) +
+  geom_vline(
+    data = events_data,
+    aes(xintercept = date),
+    linetype = "dashed",
+    color="#9e2a2b",
+    linewidth=0.4
+  )+
+  geom_segment(
+    data = events_data,
+    aes(x = label_x, y = label_y, xend = date, yend = label_y),
+    arrow = arrow(length = unit(1.5, "mm"), type = "closed"),
+    color = "#8A2535",
+    linewidth = 0.4
+  )+
+  geom_label(
+    data=events_data,
+    aes(x=label_x,y=label_y,label=event),
+    color="#8A2535",
+    label.size = 0.2,
+    fill="#FAFAFA",
+    fontface="bold",
+    size=2.8,
+    box.padding = 1.5,
+    point.padding = 0.5,
+    force=3,
+    segment.size = 0.4,
+    min.segment.length = 0,
+    direction = "both"
+  )+
+  scale_x_date(
+    breaks = my_breaks,
+    date_labels = "%Y-%m",
+    limits = c(as.Date("2025-01-01"), as.Date("2026-10-08"))
+  )+
+  labs(
+    title = "Strait of Hormuz Crude Oil Flow Index",
+    subtitle = "Iran-related geopolitical events",
+    x = "Date",
+    y = "7-day Moving Average Index",
+    caption = "Source: Strait of Hormuz Trade Tracker, AXSMarine & WTO"
+  ) +
+  theme_minimal()+
+  theme(
+  plot.title = element_text(face = "bold", size = 14),
+plot.subtitle = element_text(color = "grey30", size = 10, margin = margin(b = 10, t=5),hjust=0.001),
+axis.title.x = element_blank(),
+  plot.margin = margin(t = 15, r = 50, b = 15, l = 15),
+plot.caption = element_text(
+  color="grey50",
+  margin=margin(t=10)
+),
+axis.title.y = element_text(
+  margin = margin(r = 12, t=12),
+  size=10,
+  color="grey30",
+  hjust=0.5
+),
+panel.grid.major.x = element_blank(),
+panel.grid.minor = element_blank(),
+)
+print(p)
+ggsave(
+  filename = "crude_oil_flow.png",
+  plot = p,
+  width = 12,
+  height = 6.5,
+  dpi = 300
+)
+```
+
+### Event 1: U.S.-Israeli Strikes on Iran (February 28, 2026)
+The first event was the US-Israel strikes on Iran on February 28, 2026 (Ratner et al., 2026). The crude oil shipment index for the Strait of Hormuz on the last observation date preceding the event was 99.44, but dropped to 94.10 on the day of the incident. The index then continued to decline, reaching 64.61 on March 3. It subsequently dropped significantly to 45.10 on March 5 and reached 40.55 on March 7 (World Trade Organization [WTO] & AXSMarine, n.d.). Compared with the level just before the incident, the index on March 7 was approximately 59 percent lower, suggesting that crude oil shipments through the Strait of Hormuz fell sharply within a short period following the US-Israel strikes.
+
+### Event 2: US-Iran MOU (June 17, 2026)
+The second event was the US-Iran MOU signed on June 17, 2026 (Ratner et al., 2026). The crude oil shipment index remained at 0 from June 16 to 18, before beginning to rise to 2.02 on June 19. The index climbed further to 8.22 on June 22 and remained at this level through June 24 (World Trade Organization [WTO] & AXSMarine, n.d.). This trend can be interpreted as a backlog effect, as pending shipments may have started to move with the gradual reopening of traffic in the Strait of Hormuz following the MOU.
+
+### Event 3: US-Iran Renewed Hostilites (July 7, 2026)
+The third event was the renewed U.S.-Iran hostilities on July 7, 2026 (Del Valle et al., 2026). The crude oil shipment index stood at 11.56 immediately before the event but dropped considerably to 7.92 on the day of the event, representing an approximately 31.5 percent decrease. Although it remained at this level through July 9, the index continued to decline thereafter, ultimately plummeting to 2.05 on July 14 (World Trade Organization [WTO] & AXSMarine, n.d.). Compared with July 6, the index decreased by approximately 82.3 percent over the seven days following the event. This trend suggests that crude oil shipments through the Strait of Hormuz contracted again as military tensions surrounding the area intensified.
+
+## Conclusion
+To summarize the major findings from Figures 1–3, the Strait of Hormuz ranks second in transit volume among the world’s major maritime chokepoints, underscoring its pivotal role in international crude oil transportation. Moreover, changes in crude oil prices and crude oil shipments through the Strait were observed during Iran-related geopolitical events, suggesting a certain degree of association between the two variables. In particular, the three events in 2026 showed corresponding movements in oil prices and shipments. During conflict-related events, oil prices tended to rise while shipments decreased over the short observation period. In contrast, in cases of de-escalation, such as the signing of the MOU, oil prices decreased while shipments increased.
+Overall, the Strait of Hormuz is not only geographically significant due to its high crude oil transit volume but also a strategic space closely linked to international energy security. Although this analysis shows an association between geopolitical events, oil prices, and crude oil shipments, it has limitations in clearly establishing causal relationships among them. In particular, oil prices can be influenced by various factors beyond Iran-related events, including the geopolitical situation at the time, oil supply and demand, and market expectations. In addition, since the crude oil shipment index covers only AIS-traceable vessels, it may differ from actual shipments if vessels deactivate AIS for security reasons or are omitted from tracking. Therefore, the index used in this analysis is more appropriate as an indicator of crude oil transportation flows through the Strait of Hormuz than as a complete reflection of actual shipments.
+
+\vfill\null\pagebreak
+\newpage
+
+## References
+BBC News. (2020, January 8). Iran missile attack: Did Tehran intentionally avoid US casualties? https://www.bbc.com/news/world-middle-east-51042156
+
+Bell, M. M. (2026, February 28). Iran’s Ayatollah Ali Khamenei is confirmed dead by Trump after overnight bombing. The Washington Times. https://www.washingtontimes.com/news/2026/feb/28/irans-ayatollah-ali-khamenei-confirmed-dead-trump-overnight-bombing/
+
+Bowen, J., & Gritten, D. (2024, April 1). Iran accuses Israel of killing generals in Syria strike. BBC News. https://www.bbc.com/news/world-middle-east-68708923
+
+Del Valle, M., Dlouhy, J. A., & Martin, E. (2026, July 7). US strikes Iran and blocks oil sales, in new test of truce. Financial Post. https://financialpost.com/pmn/business-pmn/us-revokes-waiver-allowing-iran-oil-sales-after-attacks
+
+Doucet, L. (2020, January 3). Qasem Soleimani: US kills top Iranian general in Baghdad air strike. BBC News. https://www.bbc.com/news/world-middle-east-50979463
+
+Federman, J., & Gambrell, J. (2024, April 14). Israel says Iran launched more than 300 drones and missiles, 99% of which were intercepted. AP News. https://apnews.com/article/strait-of-hormuz-vessel-33fcffde2d867380e98c89403776a8ac
+
+Gambrell, J. (2019, May 17). Bomb-laden drones of Yemen rebels threaten Arabian Peninsula. AP News. https://apnews.com/article/18f9c169f398464ba53c19e3963d3fba
+
+Psaledakis, D., & Zengerle, P. (2024, April 15). UN chief calls for maximum restraint after Iran’s attack on Israel. Reuters. https://www.reuters.com/world/middle-east/un-chief-calls-maximum-restraint-after-irans-attack-israel-2024-04-14/
+
+Ratner, M., Rosen, L. W., & Thomas, C. (2026, August 7). The Strait of Hormuz: Security developments and impacts on oil, gas, and other commodities. Congressional Research Service. https://www.congress.gov/crs-product/R45281
+
+Toosi, N., Desiderio, A., & Cook, N. (2020, January 8). Iran launches missile attacks on bases in Iraq housing US troops. POLITICO. https://www.politico.eu/article/iran-launches-missile-attacks-on-bases-in-iraq-housing-us-troops/
+
+U.S. Energy Information Administration. (2026, February). World oil transit chokepoints. International. https://www.eia.gov/international/analysis/special-topics/world_oil_transit_Chokepoints
+
+U.S. Energy Information Administration. (n.d.). Crude oil prices: Brent - Europe (DCOILBRENTEU). Federal Reserve Bank of St. Louis, FRED. https://fred.stlouisfed.org/series/DCOILBRENTEU
+
+VOA News. (2019, May 12). UAE: Sabotage on 4 commercial ships in Gulf of Oman. Voice of America. https://www.voanews.com/a/uae-sabotage-commercial-ships-gulf-of-oman/4914286.html
+
+World Trade Organization (WTO) & AXSMarine. (n.d.). Strait of Hormuz Trade Tracker. WTO Data Lab. https://datalab.wto.org/Strait-of-Hormuz-Trade-Tracker
+
+
+<style>
+.main-container { max-width: 100% !important; }
+</style>
